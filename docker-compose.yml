@@ -1,0 +1,34 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      PORT: 3000
+      COMPILE_TIMEOUT_MS: 30000
+      RUN_TIMEOUT_MS: 5000
+      CODE_SIZE_LIMIT_BYTES: 131072
+      CACHE_ENABLED: ${CACHE_ENABLED:-false}
+      CACHE_TTL_SECONDS: ${CACHE_TTL_SECONDS:-60}
+      IMAGE_GCC_HEAD: wandbox-clone-api-gcc-head
+      IMAGE_CLANG_HEAD: wandbox-clone-api-clang-head
+      WORK_DIR_IN_CONTAINER: /workspace
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - gcc-head
+      - clang-head
+
+  gcc-head:
+    build:
+      context: ./compilers/gcc
+      dockerfile: Dockerfile
+    image: wandbox-clone-api-gcc-head
+
+  clang-head:
+    build:
+      context: ./compilers/clang
+      dockerfile: Dockerfile
+    image: wandbox-clone-api-clang-head
