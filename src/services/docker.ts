@@ -25,8 +25,8 @@ const RUN_TIMEOUT_SEC = Math.ceil(config.RUN_TIMEOUT_MS / 1000);
 /** Non-root user in compiler images (uid:gid). */
 const CONTAINER_USER = "1000:1000";
 
-/** Max processes — 256 is enough for g++/clang++; 32 was too low to even start a container. */
-const ULIMIT_NPROC = 256;
+/** Max processes — 4096 to avoid EAGAIN on exec on some Linux hosts (Arch, runc); 256 caused "resource temporarily unavailable". */
+const ULIMIT_NPROC = 4096;
 
 /**
  * Platform-aware Docker client.
