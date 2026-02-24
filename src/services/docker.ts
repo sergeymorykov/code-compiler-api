@@ -1,4 +1,7 @@
 import { Writable } from "node:stream";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { homedir } from "node:os";
 import Docker from "dockerode";
 import { config } from "../config.js";
 import type { CompilePhaseResult, RunPhaseResult } from "../utils/responseFormatter.js";
@@ -25,7 +28,30 @@ const CONTAINER_USER = "1000:1000";
 /** Max processes — 256 is enough for g++/clang++; 32 was too low to even start a container. */
 const ULIMIT_NPROC = 256;
 
-const docker = new Docker();
+/**
+ * Platform-aware Docker client.
+ * DOCKER_HOST env takes precedence; otherwise auto-detect socket by OS.
+ */
+function createDockerClient(): Docker {
+  if (process.env.DOCKER_HOST) {
+    return new Docker();
+  }
+
+  switch (process.platform) {
+    case "win32":
+      return new Docker({ socketPath: "//./pipe/docker_engine" });
+    case "darwin": {
+      const defaultSock = "/var/run/docker.sock";
+      const userSock = join(homedir(), ".docker", "run", "docker.sock");
+      const socketPath = existsSync(defaultSock) ? defaultSock : existsSync(userSock) ? userSock : defaultSock;
+      return new Docker({ socketPath });
+    }
+    default:
+      return new Docker({ socketPath: "/var/run/docker.sock" });
+  }
+}
+
+const docker = createDockerClient();
 
 export class CompileTimeoutError extends Error {
   constructor(message: string) {

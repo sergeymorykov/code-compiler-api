@@ -16,7 +16,7 @@ services:
       IMAGE_CLANG_HEAD: wandbox-clone-api-clang-head
       WORK_DIR_IN_CONTAINER: /workspace
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - ${DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock
     depends_on:
       - gcc-head
       - clang-head
